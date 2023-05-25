@@ -1,0 +1,109 @@
+version: '3.4'
+
+services:
+  redisstack:
+    container_name: "redis-stack"
+    image: redis/redis-stack
+    ports:
+    - 6379:6379
+    - 8001:8001
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: 'rabbitmq'
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+  taskdb:
+    image: postgres
+    container_name: taskdb
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=bao
+      - POSTGRES_DB=TaskManagement
+    restart: always
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+  ocelotapigateway.services:
+    image: ${DOCKER_REGISTRY-}ocelotapigateway
+    build:
+      context: .
+      dockerfile: OcelotApiGateway/Dockerfile
+    depends_on:
+    - taskmanagement.services
+    - usermanagement.services
+    - realtime.services
+    - notification.services
+    - report.services
+    ports:
+    - "4206:80"
+  taskmanagement.services:
+    image: ${DOCKER_REGISTRY-}taskmanagementservices
+    build:
+      context: .
+      dockerfile: TaskManagement.Services/Dockerfile
+    environment:
+    - CONNECTIONSTRINGS__DEFAULTCONNECTION=Server=taskdb; Port=5432; Database=TaskManagement; Username=postgres; Password=bao;
+    ports:
+    - "4202:80"
+    volumes:
+    - /etc/timezone:/etc/timezone:ro
+    - /etc/localtime:/etc/localtime:ro
+  usermanagement.services:
+    image: ${DOCKER_REGISTRY-}usermanagementservices
+    build:
+      context: .
+      dockerfile: UserManagement.Services/Dockerfile
+    environment:
+    - ASPNETCORE_ENVIRONMENT=Development
+    - CONNECTIONSTRINGS__DEFAULTCONNECTION=Host=localhost; Port=5432; Database=UserManagement; Username=bao; Password=bao;
+    depends_on:
+    - taskdb
+    ports:
+    - "4201:80"
+    volumes:
+    - /etc/timezone:/etc/timezone:ro
+    - /etc/localtime:/etc/localtime:ro
+  realtime.services:
+    image: ${DOCKER_REGISTRY-}realtimeservices
+    build:
+      context: .
+      dockerfile: Realtime.Services/Dockerfile
+    environment:
+    - CONNECTIONSTRINGS__DEFAULTCONNECTION=Host=localhost; Database=Realtime; Username=bao; Password=bao;
+    ports:
+    - "4203:80"
+    volumes:
+    - /etc/timezone:/etc/timezone:ro
+    - /etc/localtime:/etc/localtime:ro
+  notification.services:
+    image: ${DOCKER_REGISTRY-}notificationservices
+    build:
+      context: .
+      dockerfile: Notification.Services/Dockerfile
+    environment:
+    - CONNECTIONSTRINGS__DEFAULTCONNECTION=Host=localhost; Database=Notification; Username=bao; Password=bao;
+    ports:
+    - "4204:80"
+    volumes:
+    - /etc/timezone:/etc/timezone:ro
+    - /etc/localtime:/etc/localtime:ro
+  report.services:
+    image: ${DOCKER_REGISTRY-}reportservices
+    build:
+      context: .
+      dockerfile: Report.Services/Dockerfile
+    environment:
+    - CONNECTIONSTRINGS__DEFAULTCONNECTION=Host=localhost; Database=Report; Username=bao; Password=bao;
+    ports:
+    - "4205:80"
+    volumes:
+    - /etc/timezone:/etc/timezone:ro
+    - /etc/localtime:/etc/localtime:ro
+
+volumes:
+  postgres_data:
