@@ -31,6 +31,22 @@
         "AuthenticationProviderKey": "",
         "AllowedScopes": [ "" ]
       }
+    },
+    {
+      "DownstreamPathTemplate": "/api/users",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "usermanagement.services",
+          "Port": 80
+        }
+      ],
+      "UpstreamPathTemplate": "/api/users",
+      "UpstreamHttpMethod": [ "GET", "POST" ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "",
+        "AllowedScopes": [ "" ]
+      }
     }
   ],
   "GlobalConfiguration": {

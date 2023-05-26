@@ -16,13 +16,13 @@ services:
     volumes:
       - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
       - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
-  taskdb:
+  postgressql:
     image: postgres
-    container_name: taskdb
+    container_name: postgressql
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=bao
-      - POSTGRES_DB=TaskManagement
+      - POSTGRES_MULTIPLE_DATABASES=TaskManagement,UserManagement
     restart: always
     ports:
       - "5432:5432"
@@ -47,7 +47,7 @@ services:
       context: .
       dockerfile: TaskManagement.Services/Dockerfile
     environment:
-    - CONNECTIONSTRINGS__DEFAULTCONNECTION=Server=taskdb; Port=5432; Database=TaskManagement; Username=postgres; Password=bao;
+    - CONNECTIONSTRINGS__DEFAULTCONNECTION=Server=postgressql; Port=5432; Database=TaskManagement; Username=postgres; Password=bao;
     ports:
     - "4202:80"
     volumes:
@@ -60,9 +60,7 @@ services:
       dockerfile: UserManagement.Services/Dockerfile
     environment:
     - ASPNETCORE_ENVIRONMENT=Development
-    - CONNECTIONSTRINGS__DEFAULTCONNECTION=Host=localhost; Port=5432; Database=UserManagement; Username=bao; Password=bao;
-    depends_on:
-    - taskdb
+    - CONNECTIONSTRINGS__DEFAULTCONNECTION=Server=postgressql; Port=5432; Database=UserManagement; Username=postgres; Password=bao;
     ports:
     - "4201:80"
     volumes:
@@ -74,7 +72,7 @@ services:
       context: .
       dockerfile: Realtime.Services/Dockerfile
     environment:
-    - CONNECTIONSTRINGS__DEFAULTCONNECTION=Host=localhost; Database=Realtime; Username=bao; Password=bao;
+    - CONNECTIONSTRINGS__DEFAULTCONNECTION=Server=taskdb; Port=5432; Database=TaskManagement; Username=postgres; Password=bao;
     ports:
     - "4203:80"
     volumes:
@@ -86,7 +84,7 @@ services:
       context: .
       dockerfile: Notification.Services/Dockerfile
     environment:
-    - CONNECTIONSTRINGS__DEFAULTCONNECTION=Host=localhost; Database=Notification; Username=bao; Password=bao;
+    - CONNECTIONSTRINGS__DEFAULTCONNECTION=Server=taskdb; Port=5432; Database=TaskManagement; Username=postgres; Password=bao;
     ports:
     - "4204:80"
     volumes:
@@ -98,7 +96,7 @@ services:
       context: .
       dockerfile: Report.Services/Dockerfile
     environment:
-    - CONNECTIONSTRINGS__DEFAULTCONNECTION=Host=localhost; Database=Report; Username=bao; Password=bao;
+    - CONNECTIONSTRINGS__DEFAULTCONNECTION=Server=taskdb; Port=5432; Database=TaskManagement; Username=postgres; Password=bao;
     ports:
     - "4205:80"
     volumes:
