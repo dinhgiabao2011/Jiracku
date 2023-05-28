@@ -20,6 +20,7 @@ services:
     image: postgres
     container_name: postgressql
     environment:
+      - TZ=Asia/Ho_Chi_Minh
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=bao
       - POSTGRES_MULTIPLE_DATABASES=TaskManagement,UserManagement
